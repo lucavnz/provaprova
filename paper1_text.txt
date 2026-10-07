@@ -1,0 +1,1243 @@
+--- PAGE 1 ---
+Received 17 December 2025, accepted 26 January 2026, date of publication 11 February 2026, date of current version 23 February 2026.
+Digital Object Identifier 10.1 109/ACCESS.2026.3663914
+Dual-Mode CMOS LIF Neuron With Subthreshold
+Efficiency and Saturation-Driven Robustness
+ABRAHAM A. SALAZAR-HERNANDEZ
+ 1, VICTOR H. PONCE-PONCE
+ 1, (Member, IEEE),
+HERÓN MOLINA-LOZANO 1, (Member, IEEE),
+JUAN HUMBERTO SOSSA-AZUELA
+ 1, (Senior Member, IEEE),
+AND JUAN JESÚS OCAMPO-HIDALGO
+ 2
+1Centro de Investigación en Computación, Instituto Politécnico Nacional, Mexico City 07738, Mexico
+2Departamento de Electrónica, Universidad Autónoma Metropolitana-Azcapotzalco, Mexico City 02200, Mexico
+Corresponding authors: Abraham A. Salazar-Hernandez (asalazarh2021@cic.ipn.mx) and Victor H. Ponce-Ponce (vponce@cic.ipn.mx)
+This work was supported in part by the Instituto Politécnico Nacional (IPN) under Project SIP 20253439; in part by the Secretaría de
+Ciencia, Humanidades, Tecnología e Innovación (Secihti); and in part by the Programa de Estímulos al Desempeño de los Investigadores
+(EDI) and Comisión de Operación y Fomento de Actividades Académicas (COFAA)-Sistema de Becas de Exclusividad (SIBE) programs.
+ABSTRACT We present a compact CMOS leaky integrate-and-fire neuron that operates natively in two
+regimes: subthreshold for ultra-low power and saturation for robust interfacing. This dual-mode functionality
+bridges the energy efficiency of the subthreshold operation with the connectivity advantage of saturation
+within a single circuit. The design leverages device-level parasitics and subthreshold conduction to minimize
+the energy consumption per spike and reduce silicon area. It also maintains sufficient headroom in the
+saturation region to drive or directly interface with non-subthreshold components and resistive memories.
+In addition to outlining the design methodology and sizing strategy that enable dual-mode operation
+without needing additional amplification stages, we introduce a mathematical model that captures the
+circuit dynamics. Under specified operating assumptions, this model allows us to predict the spiking
+frequency for various application targets. SPICE simulations validate the expected spiking dynamics and
+trade-offs between energy consumption and latency. We also compare our proposed neuron with recent
+CMOS implementations reported in the literature. While some earlier designs achieve lower absolute energy
+consumption, our approach features a significantly reduced transistor count and the ability to interface
+with other cells without dedicated amplification, offering a practical and integration-friendly solution.
+By converting unavoidable capacitive parasitics into advantages, this work presents a silicon-efficient
+method for low-power neuromorphic hardware, making both subthreshold efficiency and saturation-range
+connectivity key design objectives.
+INDEX TERMS Analog VLSI, CMOS, leaky integrate-and-fire (LIF), low-power neuromorphics,
+neuromorphic hardware, saturation connectivity, subthreshold efficiency.
+I. INTRODUCTION
+The growing demand for portable and autonomous devices
+has intensified the need to optimize the energy consumption
+in electronic systems. In this context, while artificial neural
+networks have shown remarkable versatility, running them
+in software on general-purpose processors or programmable
+accelerators entails a high computational load and elevated
+power consumption [1], [2], which limits their adoption in
+The associate editor coordinating the review of this manuscript and
+approving it for publication was Domenico Rosaci
+.
+embedded scenarios or under tight energy budgets. This
+landscape has motivated specialized hardware implemen-
+tations, including analog/digital neuromorphic hardware,
+aimed at reducing energy consumption and silicon area
+while preserving learning or inference functionality. More-
+over, recent studies indicate that the energy efficiency of
+artificial neurons is strongly influenced by parameters such
+as membrane capacitance and operating voltage, and that
+very low power levels can be achieved when transistors
+operate in a deep-subthreshold regime [3]. Nevertheless,
+subthreshold circuits exhibit inherent limitations due to
+27290
+
+ 2026 The Authors. This work is licensed under a Creative Commons Attribution 4.0 License.
+For more information, see https://creativecommons.org/licenses/by/4.0/ VOLUME 14, 2026
+--- PAGE 2 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+FIGURE 1. Conceptual illustration of a spiking neural network
+implemented with memristive synapses and CMOS LIF neurons. The
+neuron output operates in the saturation range.
+their low voltage supply levels [4], making them highly
+susceptible to noise and constraining their analog operating
+range. Furthermore, direct interconnection with other blocks
+operating in saturation can pose challenges (such as analog
+processing stages or digital interfaces) and often necessi-
+tates additional coupling or amplification stages to ensure
+voltage-level compatibility.
+Circuits designed to operate exclusively in the saturation
+region offer several advantages, including enhanced linearity,
+improved noise robustness, and a wider usable voltage
+swing. These characteristics make them particularly well
+suited for seamless integration with both analog and digital
+components. However, such benefits often come at the
+expense of increased circuit complexity, as they typically
+require a higher transistor count, which in turn leads to
+greater power consumption [5], [6], [7]. This inherent
+trade-off between energy efficiency in subthreshold operation
+and I/O robustness in saturation has become a central
+theme in the design of neuron circuits for neuromorphic
+hardware.
+This work presents a compact analog architecture for a
+leaky integrate-and-fire (LIF) spiking neuron model. The
+proposed model uses a mixed subthreshold and saturation
+operation, combining the benefits of both approaches. It takes
+advantage of the low energy consumption per spike event,
+which is characteristic of subthreshold operation while
+maintaining the rail-to-rail output swing and, therefore,
+the level compatibility offered by saturation. The main
+concept is to utilize a single subthreshold-operated device
+for charge and leak integration while maintaining the other
+stages in saturation for functions such as thresholding,
+spiking, resetting, and input/output operations. This approach
+enables a functional implementation with fewer transis-
+tors, eliminating the need for additional coupling stages
+or multiple supply rails. Avoiding these stages reduces
+typical area and power overheads, facilitating plug-and-play
+integration with saturation-range analog and digital blocks,
+as well as with platforms based on resistive memories [8]
+(Fig. 1).
+A. ABBREVIATIONS AND ACRONYMS
+The following abbreviations are used in this manuscript:
+CMOS — complementary metal–oxide–semiconductor;
+DRC — design–rule–checking; LIF — leaky integrate-and-
+fire; MOSFET — metal–oxide–semiconductor field-effect
+transistor; PDK — process design kit; SPICE — simulation
+program with integrated circuit emphasis; VTC — voltage
+transfer characteristic.
+B. PAPER ORGANIZATION
+The remainder of this paper is organized as follows:
+Section II introduces the mathematical model of the LIF
+neuron, which serves as the analytical baseline for our
+circuit design. It presents the differential equation governing
+membrane charging and reset, defines the key state variables
+and parameters, and establishes the operating assumptions.
+This section also summarizes MOS transistor behavior in the
+subthreshold region.
+Section III presents the proposed circuit in detail and
+explains its operation across three functional stages: (i)
+integration/reset, (ii) threshold and spike generation, and
+(iii) gain- and feedback-based reset. We derive the sizing-
+relevant expressions, specifically, transistor W/L ratios used
+to parameterize the design, including the inverter trip point
+that defines the LIF threshold, the effective leakage resistance
+in the subthreshold region, the membrane capacitance
+(accounting for intrinsic and parasitic contributions as well
+as any explicit capacitors), and the available excitation
+current options. Building on these relations, we establish a
+closed-form relationship between the trip point, the average
+leakage resistance, and the membrane capacitance to estimate
+the target firing frequency.
+Section IV reports the results and discussion. We compare
+theoretical predictions with SPICE simulations (both pre-
+and post-layout) in the SKY130 process, quantify the level
+of agreement in firing frequency across operating points,
+and analyze the energy–latency trade-offs enabled by the
+proposed dual-mode topology. This section also reports the
+silicon area obtained from the layout, discusses the impact
+of parasitics on firing frequency, particularly the post-layout
+SPICE simulation slowdown, and presents a comparative
+table against recent LIF implementations reported in the
+literature (both subthreshold-only and saturation-only), with
+emphasis on transistor count, energy per spike, and interface
+requirements.
+Section V concludes the paper by summarizing the main
+findings and limitations and outlining future improvements
+toward application-specific tuning.
+II. THEORY AND MODELING
+In this section, the mathematical model of the LIF is presented
+as the analytical basis for the circuit design, complemented by
+an overview of transistor behavior in the subthreshold region.
+A. LIF MODEL
+The LIF neuron, as illustrated in Fig. 2, consists of a
+membrane capacitor Cm, a leak resistor Rleak, and an
+excitatory input current signal Iex. Under a constant Iex, the
+membrane voltage, Vm, evolves according to a first-order
+VOLUME 14, 2026 27291
+--- PAGE 3 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+FIGURE 2. Equivalent electrical model of the leaky integrate-and-fire (LIF)
+neuron, showing the membrane capacitance Cm, the leakage resistance
+Rleak, the excitation current Iex, and the firing/reset mechanism.
+linear dynamics with a time constant τ = RleakCm. When
+Vm reaches a threshold voltage Vth, the neuron generates a
+spike event at the output node, denoted by Vout. Following
+the spike event, the membrane voltage is reset to Vreset, and
+the integration process resumes.
+The charge–discharge dynamics of the membrane node are
+described by (2),(1).
+Cm
+dVm
+dt + Vm
+Rleak
+− Iex = 0, (1)
+where,
+Iex = ICm + IR. (2)
+ICm, and IR, are the currents flowing through Rleak and Cm.
+The equation in (1) has been widely used in analog hardware
+implementations of LIF neurons [9], for which a general
+solution is given by (3):
+vm(t) = RleakIex + k
+exp
+(
+t/(RleakCm)
+), (3)
+where k is set by the initial condition Vm(0) = Vreset, yielding
+k = Vreset − RleakIex. Therefore, the membrane voltage
+evolves as in (4):
+vm(t) = RleakIex +
+(
+Vreset − RleakIex
+)
+e−t/(RleakCm). (4)
+When vm(t) reaches Vth, the neuron fires, and the
+membrane potential is reset to Vreset, closing the integrate–
+fire–reset cycle. For compactness, we reference the LIF
+dynamics with the piecewise expression in (5), where τ =
+RleakCm:
+vm(t) =
+{
+RleakIex
+(
+1 − e−t/τ)
+, Vm < Vth(lif),
+fire, reset, and refractory, Vm ≥ Vth(lif).
+(5)
+B. SUBTHRESHOLD CONDUCTION
+In digital electronics, MOS transistors are commonly oper-
+ated in strong inversion to toggle between the logical states
+of cut-off and saturation. However, describing a device as
+‘off’ is a simplifying abstraction that doesn’t reflect the
+underlying physics of the device. From a physical standpoint,
+even when the gate-to-source voltage is below threshold,
+the transistor conducts a small but finite current [10],
+[11], [12], governed by carrier diffusion along the channel
+rather than by the drift-dominated transport characteristic of
+strong inversion. While drift-current mechanisms in MOS
+transistors are extensively treated in the literature [13],
+FIGURE 3. Illustration of drift-dominated carrier transport in strong
+inversion, where charge motion is primarily driven by the electric field
+between drain and source.), in the strong inversion operation.
+FIGURE 4. Illustration of diffusion-dominated carrier transport in
+subthreshold operation, where current arises from carrier concentration
+gradients even for VGS < Vth.
+[14], the diffusion-driven conduction that dominates in
+the subthreshold regime is often given comparatively less
+emphasis in circuit-level expositions.
+When a MOS transistor operates under strong electric
+fields, such as in the case of strong inversion, both electrons
+(the negative carriers in N-MOS transistors) and holes
+(the positive carriers in P-MOS transistors) are primarily
+influenced by the applied field between the drain and source
+terminals. Electrons drift toward the positive drain terminal,
+while holes drift toward the negative source terminal. This
+movement, driven by the electric field, is referred to as
+drift current (Fig. 3). By contrast, diffusion current arises
+from carrier concentration gradients. Regions with higher
+electron/hole concentrations tend to spread into regions of
+lower concentration, producing a net current even in the
+absence of a strong external electric field (Fig. 4).
+This behavior is modeled by the subthreshold drain–current
+expression as in (7) [15], where the current does not vanish
+for Vgs < Vth; instead, it decreases exponentially as Vgs is
+reduced. Consequently, even for Vgs = 0 [11], a small (yet
+nonzero) subthreshold leakage current is present, as in (7),
+confirming that a MOSFET is never fully ‘‘off.’’
+I0 = µ0 Cox
+W
+L (n − 1) V 2
+t , (6)
+Id = I0 exp
+(Vgs − Vth
+n Vt
+)(
+1 − e−Vds/Vt
+)
+. (7)
+27292 VOLUME 14, 2026
+--- PAGE 4 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+FIGURE 5. Proposed dual-mode CMOS LIF neuron topology. Transistor M1
+operates in the subthreshold region to perform leaky integration, while
+transistors M2–M5 operate in saturation to provide threshold detection,
+spike generation, gain, and reset with full-swing output.
+FIGURE 6. Functional operating stages of the proposed LIF neuron:
+(a) integration and reset model at the membrane node, (b) threshold
+detection and spike generation, and (c) gain and feedback-based reset
+stage.
+In summary, when a MOS transistor operates in the
+subthreshold region, it is not truly turned off; instead,
+it conducts a small current dominated by carrier diffusion,
+which, from a circuit-level perspective, manifests as a very
+large effective resistance at the membrane node, Vm.
+III. CIRCUIT DESIGN AND OPERATION
+This section describes the proposed circuit and its operation
+across the functional stages, highlighting the key expressions
+and parameters that enable estimation of the firing frequency.
+A. CIRCUIT OPERATION
+The proposed circuit (Fig. 5) is organized into three main
+stages: integration and reset (transistor M1, operated in
+subthreshold), threshold detection and spike generation
+(transistors M2–M3), and gain with feedback-based reset
+(transistors M4–M5). Next, we will explain each operating
+stage in detail.
+1) Integration and reset (Fig. 6(a)): The excitation
+current Iex charges the membrane capacitance at the
+drain node of transistor M1, which is formed by
+the aggregate of intrinsic and parasitic capacitances
+connected to that node. As the membrane voltage Vm
+increases and reaches the inverter trip point Vth(lif),
+which defines the membrane threshold and is set by
+transistors M2–M3, the subsequent stage of operation
+is activated.
+2) Threshold and spike (Fig. 6(b)): The M2–M3 inverter
+senses Vm and toggles abruptly at its switching
+threshold Vth(lif), producing the spike that drives the
+following stage.
+3) Gain and feedback reset (Fig. 6(c)): The M4–M5
+inverter stage provides the final output and feeds back
+a short reset pulse. Upon receiving this feedback,
+M1 is momentarily driven into conduction, enabling
+the leakage path and discharging Cm. Once the pulse
+ends, M1 returns to its subthreshold integration role,
+starting a new charge cycle and thus yielding a periodic
+spike train. In addition, the neuron’s output voltage,
+Vout, reaches digital-compatible levels, up to 1.8 V for
+SKY130 nominal transistors (Fig. 7(c)).
+This feedback mechanism yields stable oscillatory behav-
+ior without the need for external passive components, relying
+solely on the device’s intrinsic capacitances.
+B. LIF CIRCUIT MODEL
+The proposed circuit consists of five transistors and an
+excitation current source, as shown in Fig. 5. Transistor M1
+performs the integration of the input excitation current Iex,
+feed at the neuron input. It exploits the parasitic capacitances
+present at its drain node, together with its intrinsic channel
+resistance in the subthreshold region, to establish an effective
+membrane time constant τ = RleakCm, as long as the
+membrane voltage Vm remains below the inverter trip
+point Vth(lif). Once the gate voltage exceeds this threshold,
+M1 transitions to a strong-conduction regime and rapidly
+discharges the accumulated charge at the membrane node,
+thereby implementing the reset operation (see Fig. 6(a)).
+To quantify the leakage resistance associated with the Vm
+node in the subthreshold regime, denoted as Rleak, it is
+necessary to recall the subthreshold drain-current model
+given in (7) [16]. Operating M1 in subthreshold is key
+because, between spike events, the device behaves as a
+controlled-leaky element, providing a well-defined, tunable
+effective resistance that governs the membrane dynamics
+prior to threshold crossing.
+Additionally, the gate signal switches rapidly between
+voltage rails. This transition must happen quickly; as soon
+as the membrane voltage exceeds Vth(lif), the M1 channel
+immediately drains the charge stored at its drain node. Since
+the integration currents are in the range of nanoamperes, Rleak
+needs to be quite large (typically in the M  to G range) to
+achieve a practical charging time, which is generally in the
+tens to hundreds of microseconds.
+Rleak =
+⏐⏐⏐⏐
+Vds
+id
+⏐⏐⏐⏐=
+⏐⏐⏐⏐⏐⏐
+Vds
+I0 exp
+(Vgs−Vth
+n Vt
+)(
+1 − e−Vds/Vt
+)
+⏐
+⏐⏐⏐⏐⏐
+. (8)
+The last expression (8) is significant because it indicates
+that the resistance is influenced by both the drain-source
+voltage and the gate-source voltage. However, during the
+intervals between spikes, the gate-source voltage is con-
+siderably smaller than the N-MOS transistor threshold Vth,
+allowing us to approximate Vgs ≈ 0. Furthermore, since
+VOLUME 14, 2026 27293
+--- PAGE 5 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+Vds = Vm, the equation (8) simplifies to:
+Rleak =
+⏐⏐⏐⏐⏐
+Vm
+I0 exp
+(
+− Vth
+n Vt
+)(
+1 − e−Vm/Vt
+)
+⏐⏐⏐⏐⏐. (9)
+As noted, the leak resistance Rleak depends primarily on
+the membrane potential Vm. Since Vm varies over time during
+the integration phase, Rleak is not constant. By inspecting the
+capacitor-voltage plot (Fig.7(a)) and the Rleak plot (Fig. 7(b)),
+two relevant regions can be distinguished:
+• Positive voltage (0 ≤ Vm ≤ Vth(lif)): Rleak increases
+almost monotonically (approximately linearly over the
+range of interest), from a minimum value, whenVm ≈ 0,
+to a maximum value, asVm ≈ Vth(lif). Once the threshold
+is exceeded, the inverter switches, changes the device’s
+operating regime, and discharges the node.
+• Negative voltage (−0.7 ≤ Vm < 0): When Vm <
+0 occurs during node discharge at Cm, forward biasing
+of the drain-substrate junction may occur; the ratio
+Rleak = V /I may appear with a negative sign according
+to the direction of the current. This does not imply
+a physically negative resistance; it is an undesirable
+transient condition in the circuit.
+This transient negative-voltage behavior at the Cm node
+arises from charge redistribution effects, primarily driven by
+the gate-to-drain parasitic capacitance of M1 during the fast
+transition of the Vgs1 pulse. When the reset signal switches
+abruptly, capacitive coupling between the gate and drain
+momentarily injects charge into the membrane node, pulling
+the Vm voltage below ground. This effect is exacerbated when
+the effective membrane capacitance is dominated by small
+parasitic components. By increasing Cm through the addition
+of a small explicit MiM capacitor, the relative impact of this
+parasitic charge injection is significantly reduced, and the
+transient negative excursion at the membrane node effectively
+vanishes. In this case, the larger total capacitance absorbs the
+injected charge, preventing appreciable voltage undershoot.
+When a transient negative voltage appears at the drain of M1,
+the drain-substrate p-n junction may become forward-biased.
+Since this junction begins to conduct at approximately 0.7 V,
+corresponding to the typical forward voltage of a silicon
+diode, the maximum negative excursion of the drain voltage is
+inherently limited to approximately −Vf ≈ −0.7 V. Forward
+conduction clamps the membrane potential and prevents
+further decrease.
+The leakage resistance at the drain of M1, denoted as
+Rleak, varies as a function of the membrane voltage. When
+the membrane voltage Vm approaches zero, the effective
+resistance is relatively low. As Vm increases during the
+integration phase, Rleak correspondingly increases. When
+the membrane potential reaches the firing threshold, the
+operating regime of M1 changes abruptly: the device exits
+the subthreshold region and rapidly transitions into strong
+inversion. This regime change enables a much larger drain-
+source current, which efficiently discharges the charge
+accumulated at the Vm node, thereby resetting the membrane
+FIGURE 7. Transient waveforms of the LIF neuron: (a) membrane voltage
+Vm, (b) effective leakage resistance Rleak, and (c) output spike waveform;
+illustrating subthreshold integration followed by saturation-driven reset.
+voltage toward zero and initiating the next integration
+cycle.
+In the Rleak waveform (Fig. 7(b)), two distinct regimes can
+be identified. Initially, Rleak exhibits a gradual evolution with
+relatively low resistance values, consistent with the slow and
+controlled charging of the membrane capacitor observed over
+the same time interval in Vm. This behavior corresponds to
+subthreshold operation, in which M1 provides a weak but
+nonzero conduction path to ground during the integration
+phase.
+As the membrane voltage increases, Rleak rises exponen-
+tially, reflecting the strong dependence of the subthreshold
+drain current on the drain–source voltage. It is important
+to recall that, between spike events, the gate voltage of
+M1 remains essentially at 0 V. Although the transistor
+can be regarded as ‘‘off’’ from a digital perspective,
+it never fully turns off; therefore, the subthreshold con-
+duction model remains valid throughout the integration
+interval.
+Over the practical operating range, from Vreset up to
+the inverter switching threshold Vth(lif), the variation of
+Rleak can be reasonably approximated as quasi-linear. This
+observation justifies the linearization of Rleak(Vm) adopted
+in the subsequent analysis, enabling an analytical estimate
+of the average leak resistance used in the firing-frequency
+derivation. The upper bound of the membrane voltage is
+ultimately set by the inverter switching threshold, which
+defines the neuron firing level and marks the transition to the
+second stage of circuit operation.
+27294 VOLUME 14, 2026
+--- PAGE 6 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+FIGURE 8. Voltage-transfer characteristic (VTC) of the inverter formed by
+transistors M2–M3, showing the switching voltage Vc , which defines the
+effective LIF firing threshold Vth(lif).
+C. INVERTER SWITCHING THRESHOLD V TH(LIF)
+In this stage, the LIF neuron threshold voltage, also referred
+to as the inverter switching voltage, is derived from the
+MOS transistor conduction-current expressions. The inverter
+consists of a complementary pair of MOS transistors, one
+p-type and one n-type. The switching voltage corresponds
+to the operating point at which both transistors conduct
+simultaneously [17]. On the voltage-transfer characteristic
+(VTC), this condition is identified at the intersection of the
+input-output curves (Fig. 8), where the drain currents of the
+p- and n-type devices are equal, i.e., Idp = Idn as expressed
+in (12). At this operating point, both transistors reside in
+the saturation region, which defines the inverter’s transition
+behavior and establishes the effective firing threshold of the
+LIF neuron.
+Idp = Idn, (10)
+k0 = µ0Cox
+W
+L , (11)
+1
+2 kp
+(
+Vsg − |Vth|
+)2 = 1
+2 kn
+(
+Vgs − Vth
+)2, (12)
+at the inverter switching point, it is necessary that Vin = Vout.
+We denote this common value as Vc (the switching voltage),
+which defines the neuron’s effective threshold Vth(lif), and it
+should not be confused with the device threshold Vth. From
+this, we obtain:
+kp
+(
+Vdd − Vc − |Vth|
+)2 = kn
+(
+Vc − 0 − Vth
+)2, (13)
+√
+kp
+(
+Vdd − Vc − |Vth|
+)
+=
+√
+kn
+(
+Vc − Vth
+)
+, (14)
+√
+kp Vdd −
+√
+kp Vc −
+√
+kp |Vth| =
+√
+kn Vc −
+√
+kn Vth,
+(15)
+Vc =
+√kp
+(
+Vdd − |Vth|
+)
++ √kn Vth
+√kn +√kp
+= Vth(lif). (16)
+Equation (16) provides the inverter switching voltage,
+which, in our implementation, is the effective LIF threshold.
+This implies that the threshold can be tuned to tailor the
+neuron’s behavior. At first glance, one might expect a lower
+threshold to accelerate firing, whereas a higher threshold
+would delay it.
+However, because transistor M1 operates in the subthresh-
+old region, its behavior is highly sensitive to the parasitic
+capacitances present at the membrane node. As a result,
+any modification in the sizing of transistors M2 and M3
+(i.e., their W /L ratios) alters not only the inverter switching
+threshold but also the effective capacitive loading seen at
+the membrane node, directly affecting the integration time
+constant. Consequently, increasing the inverter switching
+threshold Vth(lif) alone does not necessarily lead to a longer
+integration interval or increased firing latency. Instead, the
+neuron dynamics are primarily governed by the effective
+membrane time constant τ = RleakCm, which depends on
+both the subthreshold leakage resistance of M1 and the total
+capacitance at the membrane node.
+In practice, Vth(lif) must therefore be co-designed with
+the membrane capacitance, comprising parasitic and optional
+explicit components, and with the subthreshold leakage
+characteristics that define Rleak. This co-design approach
+enables controlled tuning of the firing frequency through
+time-constant engineering rather than relying solely on
+threshold adjustment.
+D. PARASITIC CAPACITANCE CONSIDERATIONS
+To complete the analysis, it is necessary to determine the
+value of Cm, which represents the equivalent capacitance at
+the integration (membrane) node. This capacitance is formed
+by the cumulative parasitic contributions of all transistors
+connected to the node, as well as by any external elements
+responsible for delivering the excitation current. It is impor-
+tant to emphasize that, when operating in the subthreshold
+region, transistor M1 becomes highly sensitive to capacitive
+effects at the membrane node. While subthreshold operation
+offers substantial benefits, most notably, a significant reduc-
+tion in energy consumption, it also increases susceptibility to
+process variations, parasitic loading, and noise coupling. As a
+result, an accurate estimation of Cm is essential for predicting
+the neuron’s temporal dynamics and firing behavior.
+Considering only transistors M1, M2, and M3, the total
+membrane capacitance can be approximated as:
+Ct = CgdM1 + CbdM1 + CgsM2 + CgdM2 + CgbM2
++ CgsM3 + CgdM3 + CgbM3 + Cm, (17)
+where Ct denotes any explicit capacitor connected at the node.
+It follows that larger transistor sizes lead to larger parasitic
+capacitances; therefore, a balance between device sizing and
+parasitics must be established to achieve the desired circuit
+behavior.
+A practical issue arises when an ideal current source is
+connected directly to the integration node, as illustrated in
+Fig. 9, since such a source does not contribute any parasitic
+capacitance. Although this idealization may be acceptable for
+a first-order analysis, the excitation currents of interest lie in
+the nanoampere range. Under these conditions, even small
+variations in the effective capacitance at the membrane node
+can lead to noticeable changes in the charging dynamics and,
+consequently, in the neuron firing frequency, as illustrated in
+Fig. 10.
+VOLUME 14, 2026 27295
+--- PAGE 7 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+FIGURE 9. Response of the LIF circuit with an ideal current source,
+Iex = 23.8 nA.
+FIGURE 10. Membrane-voltage response when a capacitive load is
+present, showing modified integration dynamics and firing period due to
+additional capacitive loading. With Iex = 23.8 nA and Cm = 0.2 pF.
+At this stage, the design can follow one of two
+complementary strategies:
+1) Introduce a small additional capacitance as an explicit
+design parameter to stabilize the integration node.
+2) Isolate the integration node using a dedicated input
+element to decouple it from external parasitic
+effects.
+In this work, we deliberately combine both strategies
+because they address different (and complementary) sources
+of variability at the integration node. Adding a small explicit
+Cm provides a well-defined capacitive reference that reduces
+the relative impact of parasitic charge injection (e.g., via
+gate–drain coupling during fast switching) and stabilizes the
+membrane trajectory, preventing undesired voltage under-
+shoot. In parallel, introducing a dedicated input (isolation)
+element decouples the membrane node from the excitation
+source and its associated parasitics, ensuring that variations in
+the current-delivery circuitry do not unintentionally modulate
+the effective node capacitance.
+Therefore, by combining isolation and explicit capaci-
+tance, we turn the membrane dynamics into a controlled,
+designable time constant τ = RleakCm, improving the
+predictability of the firing frequency, robustness against
+parasitic fluctuations, and compatibility with integration in
+larger mixed-signal systems.
+Our proposal is to incorporate an additional transistor
+that acts as a current-source buffer, delivering the required
+excitation current in a controlled manner, and to add a
+FIGURE 11. Modified LIF circuit including an isolation transistor (M6) and
+a small explicit membrane capacitor Cm, used to decouple the integration
+node from external parasitics and mitigate charge-injection effects.
+compensation capacitor (C m) to prevent undesired current
+flows, as shown in Fig. 11. This keeps the membrane voltage
+within the supply range (from 0 to Vdd). It is worth noting that
+the proposed circuit shares the same general structure as other
+implementations reported in the literature [18], [19], differing
+only in the placement of the capacitor and the supply voltage
+levels. This allows tighter control of the membrane voltage,
+which in turn enables a more accurate estimate of the firing
+frequency, as shown in (21).
+Although a transistor is proposed as the isolation element,
+any component that provides capacitive decoupling could be
+used in its place. The isolation transistor also adds its own
+capacitances to the node, leading to the modified expression
+in (18):
+Ct = CgdM1 + CbdM1 + CgsM2 + CgdM2 + CgbM2 + CgsM3
++ CgdM3 + CgbM3 + CgsM6 + CbsM6 + Cm, (18)
+where transistor M 6 denotes the isolation device and Cm
+denotes the explicit membrane capacitor (if present).
+Although the isolation transistor is not strictly required
+for circuit functionality, its inclusion significantly enhances
+robustness by mitigating the influence of parasitic capaci-
+tances at the integration node. The device effectively acts as a
+buffer, decoupling the membrane node from the capacitances
+associated with the excitation source. As a result, the
+charge and discharge dynamics of the membrane capacitor
+become more predictable, enabling tighter control of the
+effective time constant and, consequently, of the neuron firing
+behavior. In addition, the explicit capacitor allows for tuning
+the neuron’s firing frequency. This capacitor is connected
+between the integration node and the reference potential
+(GND), and its value can be adjusted to modify the circuit
+time constant.
+With these modifications, the response of the LIF
+circuit, including both the isolation transistor and the
+compensation capacitor, is shown in Fig. 12. The resulting
+waveforms exhibit more stable and well-controlled mem-
+brane dynamics, with the membrane voltage remaining
+within the supply range. This improved behavior facilitates
+reliable integration with other circuit blocks and signifi-
+cantly enhances robustness against variations in parasitic
+capacitance.
+27296 VOLUME 14, 2026
+--- PAGE 8 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+FIGURE 12. Transient response of the modified LIF circuit with isolation
+and compensation capacitance: (a) membrane voltage, (b) effective
+leakage resistance, and (c) output spike waveform, demonstrating
+improved stability and controlled dynamics, with Iex = 23.8nA.
+E. FIRING FREQUENCY
+The firing frequency refers to the number of pulses generated
+per unit time and is directly related to the circuit time
+constant, which depends on the resistance and capacitance at
+the integration node. To determine the time interval required
+for this model to reach the threshold voltage (19), we impose
+the condition vm = vth(lif):
+vth(lif) = RleakIex + vreset − RleakIex
+e t/(RleakCm) . (19)
+Solving for t yields the time required for the membrane
+voltage to reach the firing threshold vth(lif), as given in (20):
+t = RleakCm ln
+( vreset − RleakIex
+vth(lif) − RleakIex
+)
+. (20)
+Recalling that the firing frequency is defined as the
+inverse of the oscillation period, the corresponding firing-rate
+expression is obtained as (21):
+f = 1
+RleakCm ln
+(
+Vreset−RleakIex
+Vth(lif)−RleakIex
+). (21)
+From (21), it is evident that the firing frequency depends
+primarily on the excitation current Iex and the effective
+leakage resistance Rleak, while the remaining parameters are
+treated as design-time constants.
+Because Rleak varies over the integration phase as a
+function of the membrane voltage, a practical approximation
+consists of computing its average value over the relevant
+FIGURE 13. Effective leakage resistance Rleak versus membrane voltage
+Vm over the operating range from Vreset to Vth(lif), illustrating the
+quasi-linear region used for analytical approximation, with Iex = 23.8nA.
+membrane-voltage range, as described in (22):
+f = 1
+b − a
+∫b
+a
+f (x) dx, (22)
+It is important to note that Rleak is defined as a function of
+the membrane voltage Vm, while Vm itself depends on Rleak
+through the integration dynamics. This mutual dependence
+introduces an implicit coupling between the two quantities.
+Because this interdependence precludes a straightforward
+closed-form solution, we approximate the dependence of
+Rleak on Vm with a linear relationship (Fig. 13) over the
+operating range of interest.
+This simplification preserves the essential model behavior
+while enabling an analytical treatment (23) (remember that
+Vreset ≥ 0).
+Rleak(Vm) = m Vm + b, Vreset ≤ Vm ≤ Vth(lif), (23)
+where,
+m = Rleak(Vm2) − Rleak(Vm1)
+Vm2 − Vm1
+, (24)
+b = Rleak(Vm) − mVm. (25)
+Under this linearization, the average leak resistance over
+the integration swing is:
+Rleak = 1
+Vth(lif) − Vreset
+∫Vth(lif)
+Vreset
+(
+mVm + b
+)
+dVm, (26)
+Rreset =
+( 1
+Vth(lif) − Vreset
+)( mV 2
+m
+2 + bVm
+)⏐⏐⏐⏐
+Vth(lif)
+Vreset
+, (27)
+Rleak =
+( 1
+Vth(lif) − Vreset
+)(m
+2
+(
+V 2
+th(lif) − V 2
+reset
+)
++b
+(
+Vth(lif) − Vreset
+))
+, (28)
+Rleak = m
+2
+(
+Vth(lif) + Vreset
+)
++ b. (29)
+If Vreset = 0, (29) simplifies to (30):
+Rleak = mVth(lif)
+2 + b, (30)
+finally, the firing frequency can be written as (31):
+f = 1
+RleakCm ln
+(
+Vreset−RleakIex
+Vth(LIF)−RleakIex
+), (31)
+VOLUME 14, 2026 27297
+--- PAGE 9 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+TABLE 1. Average leakage resistance Rleak, excitation current Iex, and
+their product for different operating points, confirming that Rleak · Iex
+remains approximately constant and above Vth(lif).
+and, under the same approximation Vreset = 0, it reduces
+to (32):
+f = 1
+RleakCm ln
+(
+− RleakIex
+Vth(LIF)−RleakIex
+). (32)
+Once the firing-frequency expression is available, it can
+be used to analyze the LIF circuit’s behavior as a function
+of its design parameters. This expression enables systematic
+tuning of the excitation currentIex, the membrane capacitance
+Cm, and the threshold voltage Vth(LIF), together with the reset
+level Vreset when nonzero, as well as the effective average
+leakage resistance Rleak, in order to achieve a desired firing
+rate. Such tunability is essential for applications that require
+precise control of neuronal dynamics.
+The frequency expression in (32) is valid when the reset
+voltage is nonnegative (V reset ≥ 0), a condition under which
+Rleak exhibits an approximately linear dependence over the
+integration range. Moreover, when the devices connected to
+the integration node are aggressively scaled down, the explicit
+membrane capacitor may dominate the charge-discharge
+dynamics. In this case, the firing frequency can be accurately
+estimated using a simplified capacitor-dominated model.
+Another important aspect of (32) is the constraint imposed
+by the natural logarithm, which requires its argument to be
+strictly positive. Consequently, it must be ensured that the
+product Rleak · Iex always exceeds the firing threshold Vth(lif).
+To verify this condition, the average leakage resistance
+Rleak
+was computed for each excitation current using (30). The
+results show that the product Rleak ·Iex remains approximately
+constant and consistently exceeds Vth(LIF), as summarized
+in Table 1. This confirms that the logarithm’s argument is
+always positive over the considered operating range.
+Another way to compute the average resistance analyt-
+ically is to use (9). Owing to the linear behavior of the
+resistance, the average of a linear function over an interval
+equals its value at the midpoint. Thus, it suffices to substitute
+Vm =
+(
+Vth(LIF) + Vreset
+)
+/2 into (9) to obtain (33):
+Rleak ≈ Vth(lif) + Vreset
+2I0 exp
+(
+− Vth
+n Vt
+)(
+1 − exp
+(
+− Vth(lif)+Vreset
+2Vt
+)), (33)
+FIGURE 14. LIF neuron response to a ramp input voltage, from 0 to 1 V,
+applied to the excitation device, demonstrating spike generation over a
+wide dynamic range of excitation currents.
+finally, if Vreset = 0, the equation reduces to (34).
+Rleak ≈ Vth(lif)
+2I0 exp
+(
+− Vth
+n Vt
+)(
+1 − exp
+(
+− Vth(lif)
+2Vt
+)). (34)
+By obtaining the average resistance from Eq. (34),
+a resistive value of 964M is obtained. Referring to
+Table 1, we note that the average resistance lies within the
+measurement range, very close to the resistive value for
+iex = 23.8 nA. This is also visible in Fig. 13, where the mean
+resistance is approximately 1 G. As mentioned before, since
+the product (R·I ) varies very little, it can be used with Eq.(31)
+to calculate the firing frequencies that this circuit can deliver.
+IV. RESULTS AND DISCUSSION
+This section presents the obtained results and their compar-
+ison with manufacturable-technology simulations, empha-
+sizing the agreement with theoretical predictions. It also
+analyzes the energy–latency trade-offs, silicon area, and
+comparison with previous implementations.
+A. RESUL TS
+To evaluate the performance of the proposed dual-mode
+CMOS (complementary metal–oxide–semiconductor) LIF
+neuron, we ran circuit-level simulations using Xschem linked
+with the SkyWater SKY130 process design kit (PDK).
+Transient analyzes were performed with a SPICE-class
+simulator with a supply voltage of Vdd = 1.8 V (Fig. 11).
+Figure 14 presents the membrane response for various gate
+bias values applied to the input device, where a ramp-like
+stimulus drives the LIF circuit. This circuit generates spikes
+in the kilohertz to megahertz range, which are suitable for
+activating resistive memories.
+Table 2 summarizes the results for different gate voltages
+(applied to M6), reporting the corresponding excitation
+current and firing frequency.
+A comparative analysis between simulated frequencies and
+the theoretical estimate given by (32) is shown in Fig. 15.
+The plot evidences good agreement, supporting the validity
+of the proposed model and its predictive capability for the
+LIF circuit.
+27298 VOLUME 14, 2026
+--- PAGE 10 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+TABLE 2. Measured excitation current flowing through M6, firing
+frequency, and average power consumption for different gate-bias values
+applied to the gate of the isolation transistor (M6).
+FIGURE 15. Comparison between analytically predicted firing frequency
+and SPICE simulation results, showing good agreement across the
+explored excitation-current range.
+FIGURE 16. Layout view of the proposed dual-mode CMOS LIF neuron
+implemented in the SKY130 process. The compact layout confirms the
+low-area footprint of the design, which is 408µ 2.
+The circuit layout is shown in Fig. 16. The mask design
+was implemented in KLayout following the foundry design
+rules (DRC). The total active area is 408 µm2.
+The explicit (or effective) membrane capacitor is relatively
+small compared with the transistor area because the required
+capacitance is on the order of a few femtofarads; thus, no large
+capacitor is needed. By contrast, transistors M1 and M6
+dominate the silicon area: M1 is sized to set a large effective
+leak resistance, and M6 is sized to reduce the excitation
+current via isolation/buffering. With further design-space
+exploration (e.g., sizing heuristics or simple optimization),
+the total area may be reduced; increasing the explicit Cm
+allows for smaller devices while preserving the target time
+constant.
+This physical design is suitable for various integration
+applications, as compact LIF neurons can be arranged in
+a matrix with minimal area overhead. In neuron circuits,
+capacitors often limit the number of neurons that can be
+FIGURE 17. Comparison between schematic-level and post-layout
+transient simulations, highlighting the modest frequency reduction
+caused by additional parasitic capacitances after layout extraction.
+placed on a chip. By utilizing parasitic capacitances and
+maintaining a small explicit membrane capacitance (Cm), it is
+possible to increase neuron density.
+Finally, Fig. 17 contrasts the schematic-level and post-
+layout simulations. The post-layout model exhibits a slightly
+lower firing frequency, attributable to increased parasitic
+capacitances that lengthen the membrane charge time
+and reduce the oscillation frequency. In our case, post-
+layout simulation achieves 961 kHz versus 998 kHz in the
+schematic view simulation. Despite this difference, the
+similarity in oscillation frequency is 96.33%, indicating
+that the layout preserves the intended functionality and
+that the residual deviation stems from non-critical parasitic
+effects.
+An additional performance aspect is energy consumption.
+The energy per spike event can be approximated by:
+E = 1
+2 Cm V 2
+th(LIF), (35)
+where Cm is the membrane capacitance (C m = 123.5 fF in
+our circuit) and Vth(LIF) is the peak membrane voltage during
+charging (V th(LIF) ≈ 0.8 V). Using these values, we obtain
+E ≈ 35.9 fJ. The average power is then:
+P = E · f , (36)
+so, Table 2 also reflects a power–frequency relation consistent
+with subthreshold-optimized operation: ultra-low currents
+and reduced energy per spike.
+Lastly, Table 3 compares the proposed neuron with
+recent implementations. While several designs report lower
+or higher absolute energy depending on operating point
+and load, our approach combines a low device count,
+no external amplification for I/O compatibility (full swing),
+and predictable tuning via Cm and Vth(lif).
+Finally, Table 4 summarizes the values employed in the
+development of this study.
+B. DISCUSSION
+1) ENERGY–LATENCY AND ROBUSTNESS
+The results demonstrate that the proposed dual-mode topol-
+ogy leverages subthreshold integration to reduce the energy
+consumed per spike in the low-frequency regime while
+VOLUME 14, 2026 27299
+--- PAGE 11 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+TABLE 3. Comparison of the proposed LIF neuron with recent neuromorphic implementations, highlighting operating frequency, energy per spike,
+transistor count, operation region, and the need for output amplification.
+TABLE 4. Summary of device dimensions, electrical parameters, and
+model constants used in the analytical derivation and circuit simulations.
+preserving a full output voltage swing through its saturation-
+region stage. This combination eliminates the need for
+external amplifiers or level shifters and enables seamless
+plug-and-play integration with saturation-range analog and
+digital blocks.
+The associated trade-off is a modest increase in power
+consumption relative to strictly subthreshold designs.
+In exchange, the neuron achieves significantly improved
+I/O robustness while operating from a single supply, the
+same VDD rail as the host circuit, and maintains a very
+low transistor count (5T in the baseline configuration, 6T
+with isolation). These characteristics make the proposed
+design particularly well-suited for dense neuron arrays and
+mixed-regime neuromorphic systems.
+2) MODEL-BASED FREQUENCY TUNING
+(DESIGN-BY-SPECIFICATION)
+Unlike much of the existing literature, which often reports
+operating frequencies without providing a clear methodology
+for tuning them, this work derives an analytical framework
+that explicitly links the inverter trip point Vth(LIF), the
+effective membrane capacitance Cm, and the averaged
+leakage resistance
+Rleak to the firing rate through (32), with
+Rleak obtained from (29) and (30).
+This set of equations enables a design-by-specification
+approach: given a target firing frequency, the designer can
+select Cm, size transistors M2–M3 to set Vth(lif), and choose
+the excitation current Iex to meet performance objectives
+under area and energy constraints. In contrast to prior
+implementations summarized in Table 3, which primarily
+report achievable frequency and energy figures without
+an explicit tuning methodology, the proposed framework
+provides a systematic, predictive path from specifications to
+circuit parameters, facilitating fair comparisons and practical
+reuse across different operating points.
+V. CONCLUSION AND FUTURE WORK
+Finally, in this section, the main findings are synthesized
+and potential improvements aimed at specific applications are
+presented.
+A. CONCLUSIONS
+This work presents the design and analysis of a compact,
+dual-mode CMOS LIF neuron that leverages a single
+subthreshold-operated device for ultra-low-power integra-
+tion, combined with saturation-region transistors that provide
+robust thresholding, reset, and full-swing input/output opera-
+tion. The proposed architecture achieves low energy per spike
+while preserving a practical output voltage swing, enabling
+direct interfacing with saturation-range analog and digital
+blocks without the need for external amplification stages or
+multiple supply rails.
+Compared with neuron circuits implemented purely in
+saturation, the proposed circuit reduces energy consumption
+for low-frequency workloads by exploiting subthreshold
+conduction and the membrane node’s equivalent parasitic
+capacitance, all with a very low transistor count (5T baseline,
+6T with isolation).
+Relative to state-of-the-art subthreshold-only LIF designs,
+our neuron maintains a similarly small device budget while
+slightly increasing consumption to gain two pragmatic
+advantages: (i) elimination of dedicated output amplifiers
+or level shifters, and (ii) single-supply operation, which
+substantially simplifies system-level integration. These char-
+acteristics make the proposed neuron both novel and
+27300 VOLUME 14, 2026
+--- PAGE 12 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+practical for dense neuromorphic arrays and mixed-regime
+systems.
+From an analytical standpoint, we derived a closed-form
+expression for the firing frequency that explicitly links
+the inverter trip point Vth(LIF), the effective membrane
+capacitance Cm, and the averaged leakage resistance
+Rleak
+to the observed spiking rate. Circuit-level simulations using
+the SKY130 PDK validate the model across the intended
+operating region, showing good agreement between predicted
+and simulated firing frequencies and consistent energy-
+latency trends. Post-layout results further confirm correct
+functionality, with the expected frequency reduction due to
+additional parasitic capacitances remaining within acceptable
+limits.
+B. FUTURE WORK
+Several directions can further improve robustness and
+tunability:
+• Digitally controlled capacitor bank: add an on-chip
+Cm bank with simple digital control to trim the firing
+frequency post-fabrication.
+• Control and extensibility: because the neuron’s input
+and output stages operate in saturation, it is straightfor-
+ward to incorporate control features and mixed-signal
+hooks. For example, an inhibitory gate (a transistor that
+momentarily blocks current into the integrate node) can
+be added to suppress spiking; multiple input transistors
+can be placed in parallel to accept several excitation sig-
+nals; and, more generally, the saturation-mode interface
+simplifies the integration of additional digital or analog
+circuitry as needed.
+REFERENCES
+[1] M. F. Argerich and M. Patiño-Martínez, ‘‘Measuring and improving the
+energy efficiency of large language models inference,’’ IEEE Access,
+vol. 12, pp. 80194–80207, 2024, doi: 10.1109/ACCESS.2024.3409745.
+[2] N. Hinov, ‘‘The energy hunger of AI: Large language models as challenges
+and enablers for sustainable energy,’’ Energies, vol. 18, no. 17, p. 4701,
+Sep. 2025, doi: 10.3390/en18174701.
+[3] I. Sourikopoulos, S. Hedayat, C. Loyez, F. Danneville, V . Hoel, E.
+Mercier, and A. Cappy, ‘‘A 4-fJ/spike artificial neuron in 65 nm CMOS
+technology,’’ Frontiers Neurosci., vol. 11, pp. 1–14, Mar. 2017, doi:
+10.3389/fnins.2017.00123.
+[4] R. V addi, S. Dasgupta, and R. P . Agarwal, ‘‘Device and circuit design chal-
+lenges in the digital subthreshold region for ultralow-power applications,’’
+VLSI Design, vol. 2009, pp. 1–14, Apr. 2009, doi: 10.1155/2009/283702.
+[5] J. Shamsi, K. Mohammadi, and S. B. Shokouhi, ‘‘A hardware architecture
+for columnar-organized memory based on CMOS neuron and memristor
+crossbar arrays,’’IEEE Trans. V ery Large Scale Integr . (VLSI) Syst., vol. 26,
+no. 12, pp. 2795–2805, Dec. 2018, doi: 10.1109/TVLSI.2018.2815025.
+[6] N. Garg, D. Florini, P . Dufour, E. Muhr, M. C. Faye, M. Bocquet,
+D. Querlioz, Y . Beilliard, D. Drouin, F. Alibart, and J.-M. Portal, ‘‘V er-
+satile CMOS analog LIF neuron for memristor-integrated neuromorphic
+circuits,’’ in Proc. Int. Conf. Neuromorphic Syst. (ICONS), Jul. 2024,
+pp. 185–192, doi: 10.1109/ICONS62911.2024.00034.
+[7] A. Joubert, B. Belhadj, O. Temam, and R. Heliot, ‘‘Hardware spiking
+neurons design: Analog or digital?’’ in Proc. Int. Joint Conf. Neural Netw.
+(IJCNN), Jun. 2012, pp. 1–5, doi: 10.1109/IJCNN.2012.6252600.
+[8] A. Juarez-Lora, V . H. Ponce-Ponce, H. Sossa-Azuela, O. Espinosa-Sosa,
+and E. Rubio-Espino, ‘‘Building an analog circuit synapse for deep
+learning neuromorphic processing,’’Mathematics, vol. 12, no. 14, p. 2267,
+Jul. 2024, doi: 10.3390/math12142267.
+[9] M. Zare, E. Zafarkhah, and N. S. Anzabi-Nezhad, ‘‘An area and
+energy efficient LIF neuron model with spike frequency adaptation
+mechanism,’’ Neurocomputing, vol. 465, pp. 350–358, Nov. 2021, doi:
+10.1016/j.neucom.2021.09.004.
+[10] N. Sung Kim, T. Austin, D. Blaauw, T. Mudge, K. Flautner, J. S. Hu,
+M. J. Irwin, M. Kandemir, and V . Narayanan, ‘‘Leakage current: Moore’s
+law meets static power,’’ Computer, vol. 36, no. 12, pp. 68–75, Dec. 2003,
+doi: 10.1109/mc.2003.1250885.
+[11] L. Nagyt, D. Arbet, M. Kovac, M. Potocny, M. Sovcik, and
+V . Stopjakova, ‘‘EKV MOS transistor model for ultra low-voltage
+bulk-driven IC design,’’ in Proc. 24th Int. Symp. Design Diag. Electron.
+Circuits Syst. (DDECS), Vienna, Austria, Apr. 2021, pp. 6–10, doi:
+10.1109/DDECS52668.2021.9417051.
+[12] B. H. Calhoun, A. Wang, N. V erma, and A. Chandrakasan, ‘‘Sub-threshold
+design: The challenges of minimizing circuit energy,’’ in Proc. Int. Symp.
+Low power Electron. Design, Tegernsee, Germany, 2006, pp. 366–368,
+doi: 10.1145/1165573.1165661.
+[13] B. Razavi, Design of Analog CMOS Integrated Circuits, 2nd ed.,
+New Y ork, NY , USA: McGraw-Hill, 1999.
+[14] P . E. Allen and D. R. Holberg, CMOS Analog Circuit Design, 3rd ed.,
+London, U.K.: Oxford Univ. Press, 2011.
+[15] A. Tajalli and Y . Leblebici, Extreme Low-Power Mixed Signal IC
+Design. Cham, Switzerland: Springer, 2010, doi: 10.1007/978-1-4419-
+6478-6.
+[16] A. Wang, B. H. Calhoun, and A. P . Chandrakasan, Sub-threshold Design
+for Ultra Low-Power Systems. New Y ork, NY , USA: Springer, 2006, doi:
+10.1007/978-0-387-34501-7.
+[17] M. Zabeli, N. Caka, M. Limani, and Q. Kabashi, ‘‘The impact
+transconductance parameter and threshold voltage of MOSFET’s
+in static characteristics of CMOS inverter,’’ Natural Eng. Sci.,
+vol. 2, no. 3, pp. 135–148, Nov. 2017, doi: 10.28978/nesciences.
+358859.
+[18] C. Loyez, K. Carpentier, I. Sourikopoulos, and F. Danneville, ‘‘Sub-
+threshold neuromorphic devices for spiking neural networks applied
+to embedded A.I,’’ in Proc. 19th IEEE Int. New Circuits Syst. Conf.
+(NEWCAS), Jun. 2021, pp. 1–4, doi: 10.1109/NEWCAS50681.2021.
+9462779.
+[19] F. Danneville, C. Loyez, K. Carpentier, I. Sourikopoulos, E. Mercier,
+and A. Cappy, ‘‘A sub-35 pW axon-hillock artificial neuron cir-
+cuit,’’ Solid-State Electron., vol. 153, pp. 88–92, Mar. 2019, doi:
+10.1016/j.sse.2019.01.002.
+ABRAHAM A. SALAZAR-HERNANDEZ received
+the B.S. degree in communications and electronics
+engineering from the Escuela Superior de Inge-
+nierÍa Mecánica y Eléctrica (ESIME), Instituto
+Politécnico Nacional (IPN), Mexico City, in 2017,
+and the M.Sc. degree in computer engineering
+from the Centro de Investigación en Computación
+(CIC-IPN), in 2023, with a focus on analog
+circuits. He is currently pursuing the Ph.D. degree
+in computer science with IPN, specializing in
+analog and mixed-signal circuit design. He has taped out digital and analog
+integrated circuits through SiliCluster and Chipathon initiatives. His research
+interests include neuromorphic systems, analog/mixed-signal VLSI, CMOS
+LIF neurons, and resistive memories.
+VOLUME 14, 2026 27301
+--- PAGE 13 ---
+A. A. Salazar-Hernandez et al.: Dual-Mode CMOS LIF Neuron With Subthreshold Efficiency
+VICTOR H. PONCE-PONCE (Member, IEEE)
+received the B.S. degree in communications and
+electronics engineering from the Escuela Superior
+de IngenierÍa Mecánica y Eléctrica (ESIME),
+Instituto Politécnico Nacional (IPN), Mexico,
+in 1993, and the M.Sc. and Ph.D. degrees in elec-
+trical engineering from the Center for Research
+and Advanced Studies (CINVESTA V), Mexico, in
+1994 and 2005, respectively. From 2007 to 2008,
+he conducted a postdoctoral research stay with the
+École Polytechnique de Montréal, Canada. He is currently a Full Professor
+and the Head of the Microtechnology and Embedded Systems Laboratory,
+Center for Research in Computing, IPN. His research interests include
+the design of analog integrated circuits and computational platforms for
+neuromorphic systems.
+HERÓN MOLINA-LOZANO (Member, IEEE)
+received the degree in communications and elec-
+tronics engineering from the Higher School of
+Mechanical and Electrical Engineering (ESIME),
+National Polytechnic Institute (IPN), in 1991,
+the Ph.D. degree in science from the Center for
+Research and Advanced Studies of the National
+Polytechnic Institute (CINVESTA V -IPN), in 2001,
+and the M.C.C. degree in bioinformatics from
+Monterrey Institute of Technology and Higher
+Education (ITESM), in 2008. His doctoral work consisted the design
+of an analog neuro-fuzzy system (ANFIS) implemented on a CMOS
+integrated circuit. His current areas of interests include microcircuit design
+in CMOS technology, specifically analog and mixed-signal circuits and the
+implementation of neuro-fuzzy systems at the level of integrated circuits and
+FPGAs.
+JUAN HUMBERTO SOSSA-AZUELA (Senior
+Member, IEEE) received the Ph.D. degree in
+computer science from the National Polytechnic
+Institute of Grenoble, France. He is a full-time
+Professor with the National Polytechnic Institute
+and the Director of the Center for Computing
+Research. His research interests include artificial
+intelligence, machine learning, artificial neural
+networks, image analysis, pattern recognition,
+robotics, and metaverses. He is a member of
+Mexican Academy of Sciences and Mexican Academy of Engineering. He is
+also a Senior Member of the International Neural Network Society (INNS).
+He is also a member of the Academy of Computing Machinery (ACM) and
+the Association for the Advancement of Artificial Intelligence (AAAI) and
+a fellow of Mexican Society for Artificial Intelligence (SMIA).
+JUAN JESÚS OCAMPO-HIDALGO received
+the Ingeniero en Comunicaciones y Electrónica
+degree from the Escuela Superior de Inge-
+nierÍa Mecánica y Eléctrica, Instituto Politécnico
+Nacional (ESIME-IPN), Mexico City, Mexico,
+in 1995, the Maestro en Ciencias degree from the
+Centro de Investigación y de Estudios Avanzados,
+IPN (CINVESTA V -IPN), Mexico City, in 1997,
+and the Dr.-Ing. degree (summa cum laude) from
+the Technische Universität Darmstadt (TUD),
+Darmstadt, Germany, in 2004. From 2000 to 2005, he was a Research Assis-
+tant with the Institut für Mikroelektronische Systeme, TUD. He was a Design
+Engineer with Teledyne-AnaFocus, Seville, Spain, from 2006 to 2007.
+In 2019, he was a Visiting Professor with the Centro de Investigación en
+Computación, IPN (CIC-IPN), Mexico City. He is currently an Associate
+Professor with the Universidad Autónoma Metropolitana-Azcapotzalco
+(UAM-Azcapotzalco), Mexico City. His current research interests include
+low-voltage sigma-delta modulator design and design and characterization
+of CMOS imagers.
+27302 VOLUME 14, 2026

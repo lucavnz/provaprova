@@ -1,0 +1,575 @@
+--- PAGE 1 ---
+Analog Spiking Neuron in 28 nm CMOS
+Marwan Besrour ∗, Sarra Zitoun ∗, Jacob Lavoie ∗, Takwa Omrani ∗,
+Konin Koua ∗, Maher Benhouria ∗, Mounir Boukadoum † and R ´ejean Fontaine ∗
+∗ Department of Electrical Engineering and Computer Engineering, Universit ´e de Sherbrooke, Canada
+∗ 3IT Interdisciplinary Institute for Technological Innovation, Universit ´e de Sherbrooke, Canada
+† D´epartement d’informatique, Universit ´e du Qu ´ebec `a Montr ´eal, Canada
+Marwan.Besrour@Usherbrooke.ca
+Abstract—Traditional computer clusters are facing a signiﬁ-
+cant limitation as a result of the big data revolution. We need
+efﬁcient edge devices to bring the power of machine learning
+algorithms from power-hungry room servers to mobile consumer
+platforms. Neuromorphic engineering is a promising avenue for
+developing the next generation of edge devices that combine
+high computing capabilities with low power consumption in
+a small form factor . This paper shows the proof of concept
+of an analog/mixed-signal CMOS neuromorphic system on a
+chip (NeuroSoC) by presenting a low-power design of a leaky
+integrate-and-ﬁre (LIF) neuron. The design uses eight transistors
+and two capacitors for low complexity and potential to lead to
+very dense systems. The proposed model consumes 1.2 fJ/spike
+and occupies an active area of 6.73 µm by 5.09 µm when
+implemented in 28 nm CMOS. The maximum spiking frequency
+is 343 kHz.
+Index Terms—Neuromorphic, analog CMOS, leaky-integrate-
+and-ﬁre (LIF) model, machine learning, spiking neural networks
+(SNN)
+I. I NTRODUCTION
+Modern graphics processing unit (GPU) architectures have
+contributed signiﬁcantly to the current artiﬁcial intelligence
+(AI) research renaissance throughout the past few decades.
+GPUs are now more accessible to the general public as a result
+of their low cost. The recent revolution in deep learning is
+redeﬁning the nature of computing, which is driven by a surge
+in pattern classiﬁcation, cognitive tasks, and massive datasets.
+These days, machine learning models are frequently deployed
+in the cloud, where they are trained and ﬁne-tuned.
+However, real-time applications are run on the edge and
+executed on mobile consumer platforms. Wireless communi-
+cations, such as 5G, bridge the powerful remote ML models
+and the target application gap.
+Nevertheless, the demand for more specialized computing
+platforms is unavoidable due to the ever-increasing trend in
+data and models. The goal is to transfer the machine learning
+model to a mobile platform and perform local prediction
+computations. In this regard, neuromorphic computing is a
+viable option for developing faster and more energy-efﬁcient
+edge computing devices.
+Figure 1 depicts a design ﬂow that explains the methods
+utilized in neuromorphic engineering. By deﬁnition, we exploit
+an efﬁcient natural process by abstracting the concept into a
+mathematical model and implementing it at the system level.
+As the fundamental component of a neural network, the
+neuron cell is vital to overall performance. An efﬁcient way
+VDD
+VSS
+VoutVmem
+Cmem
+Isyn
+VDD
+VSS
+VoutVmem
+Cmem
+Isyn
+VDD
+VSS
+VoutVmem
+Cmem
+Isyn
+VDD
+VSS
+VoutVmem
+Cmem
+Isyn
+VDD
+VSS
+VoutVmem
+Cmem
+Isyn
+VDD
+VSS
+VoutVmem
+Cmem
+Isyn
+VDD
+VSS
+VoutVmem
+Cmem
+Isyn
+VDD
+VSS
+VoutVmem
+Cmem
+Isyn
+VDD
+VSS
+VoutVmem
+Cmem
+Isyn
+VDD
+VSS
+VoutVmem
+Cmem
+Isyn
+VDD
+VSS
+VoutVmem
+Cmem
+Isyn
+∑ ⌠ ⌡ ⌠ ⌡ 
+f(∑WiXi(t)+b)
+......
+Wn
+W2
+W1
+Wn-1
+Biological level
+Activation
+ function
+Circuit level
+System  level
+Mathematical level
+Axon 
+Terminal
+Dendrites
+Soma
+Schwan 
+Cell
+Output Spikes
+Input Spikes
+Input Spikes
+Input Spikes
+Input Spikes
+a.
+c.b.
+d.
+Fig. 1: Design ﬂow of bio-inspired artiﬁcial neurons: a) Simpliﬁed diagram
+of a biological neural cell; b) abstract model with spiking output; c) circuit
+implementation; d) system level implementation for real-life application.
+to formalize the neuron’s dynamics is the leaky integrate-
+and-ﬁre (LIF) model [1], which closely mimics the behavior
+of a biological neuron. A neuron is stimulated or inhibited
+by the outputs of other neurons through synapses, where
+neurotransmitter chemical compounds mediate the accumula-
+tion of charges in the cell’s body via ionic channels. When
+the accumulation reaches a threshold, the ionic channels are
+activated to form an action potential or spike at the neuron’s
+axon, and the neuron returns to its resting state. This process
+is modeled in the LIF by a leaky integrator coupled with a
+trigger mechanism to elicit the typical response; the resultant
+spike then propagates to other LIF neurons.
+The LIF model is seen in conventional ANNs as a suitable
+compromise between the complexity of biologically plausible
+neuron models such as the Hodgkin-Huxley and Izhikevich
+models [2] [3]. The LIF model retains the analog nature
+of biologically plausible neuron models, thus allowing an
+efﬁcient design of neuromorphic hardware. It also avoids the
+V on Neumann bottleneck paradigm, in which memory and
+processing units are still separated, while being simple to train
+with appropriate backpropagation techniques [4]. Neuromor-
+phic hardware has led to the development of new materials
+for the fabrication of electrical components that mimic the
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+978-1-6654-0105-0/22/$31.00 ©2022 IEEE 
+ 148 
+2022 20th IEEE Interregional NEWCAS Conference (NEWCAS) | 978-1-6654-0105-0/22/$31.00 ©2022 IEEE | DOI: 10.1109/NEWCAS52662.2022.9842088
+Authorized licensed use limited to: Università degli Studi di Brescia. Downloaded on August 31,2026 at 08:52:22 UTC from IEEE Xplore.  Restrictions apply. 
+--- PAGE 2 ---
+capacity of synapses to hold varying resistor values, hence
+modifying the signal accordingly. To create reliable energy-
+efﬁcient neuromorphic systems in CMOS technology [5],
+such components still face challenges that must be addressed.
+Using smaller transistors to decrease operational voltage,
+hence reducing power consumption, is another method. It
+signiﬁcantly minimizes the total area occupied by electronic
+components, making it the de facto solution for deploying real-
+time applications on edge devices. However, the reduction in
+voltage also diminishes the trans-impedance gain, requiring
+the insertion of buffer circuits for correction, and nulliﬁes the
+size gain. Therefore, caution is required when employing this
+method.
+In this paper, the design of an analog spiking neuron, based
+on the LIF model, using TSMC 28 nm CMOS technology is
+presented. Section II explains the role of each design block
+and the construction of the test benches used to validate the
+proposed circuit. The post-layout simulations are presented in
+Section III, followed by a discussion and comparison with
+recently reported designs. The paper concludes with Section
+IV , where we resume the highlight of the work presented
+throughout the paper.
+II. M ATERIALS AND METHODS
+A. Materials
+Many works have been published over the years to model
+the spiking behavior of biological neurons. The most complex
+one is the Hodgkin-Huxley (HH) model, which consists of
+a set of nonlinear differential equations that simulate the
+electrical properties of excitable cells like neurons. Izhikevich
+proposed a intermediate model that accounts for various
+spiking and bursting behaviors with only two differential
+equations [3]. This model has already been implemented
+as a CMOS circuit [6], but no large-scale system-on-chip
+has been developed using this model yet. On the other end
+of the spectrum, the LIF is the simplest model to emulate a
+biological neuron, as it only accounts for the leaky integration
+and the spiking threshold. The simplicity of this model makes
+it promising for the implementation of large-scale NeuroSoC
+processors in real-life applications, as is the case for the IMB
+TrueNorth chip [7].
+Figure 2 depicts the suggested neuron design. Three blocks
+constitute the circuit. The ﬁrst block (in orange) implements a
+basic current mirror. According to Equation (2), the transistor
+M2 replicates the current Isyn ﬂowing through the drain of
+transistor M1, which yields the current in the drain of M2:
+ID2 = 1
+2 Kp
+[ W2
+L2
+]
+[VGS − Vth]2 [1 + λV DS ] (1)
+where Kp is a technology-related constant associated with
+the transistor, W2
+L2
+is the width-to-length ratio of transistor M2,
+VGS is the gate source voltage, Vth is the threshold voltage,
+λ is the channel length modulation constant, and VDS is the
+drain-source voltage.
+The drain of the transistor M1 models the synaptic gap
+between two neurons and where neurotransmitters are ﬂowing.
+VSS
+V out
+M
+3
+M
+6
+M
+5
+I
+syn
+VDD
+C
+mem
+V
+mem
+C
+res
+M
+4
+M
+1
+M
+2
+M
+7
+M
+8
+Fig. 2: Neuron circuit architecture. Orange: Integration block; Red: Reset
+block; Green: Spike generation block.
+The capacitor Cmem integrates the input synaptic current
+which progressively increases the membrane voltage Vmem.
+The potential at this node increases linearly when there is a
+constant non-zero input current following equation (3). The
+period T is variable and depends on the input ﬂow. Since
+the data ﬂow in SNNs is intrinsically intermittent in space
+and time, we may never accurately estimate the value of T.
+Instead, the integration period is limited by the triggers set in
+the following blocks.
+Isyn = Cmem
+dVmem
+dt (2)
+Vmem = 1
+Cmem
+∫
+T
+Isyndt (3)
+The third block (green) is made up of two back-to-back
+inverters that are used to generate spikes or artiﬁcial action
+potentials at the output of the neuron. Each generated spike
+encodes all integrated input spikes through the membrane
+capacitance Cmem. Although this processing seems simple,
+the reality is not so trivial, and there is a second temporal
+dimension to consider. In fact, the inter-periods between spikes
+at the input are processed through the neuron to generate
+output spikes at given times and intervals.
+To understand the process of generating spikes by the third
+block highlighted in green, the evolution of the state variable
+Vmem must be monitored. When Vmem increases to a preset
+threshold level VSpike , the inverters are engaged, resulting in
+a single spike at the output. The value of the spiking threshold
+voltage VSpike is determined by the switching voltage of the
+ﬁrst inverter composed of M5 and M6 in equation (4). In this
+case, the two inverters operate as a voltage driven one-shot
+circuit such that :
+Vspike =
+[
+Vthn + VDsatn
+2
+]
++ r
+[
+V DD + Vthp + VDsatp
+2
+]
+1 + r (4)
+where Vthn and Vthp are threshold voltages, VDsat is the
+saturation voltage of the drain source and r is a technology
+variable where r = KpVDSAT n
+KnVDSAT p
+[8].
+2
+ 149 Authorized licensed use limited to: Università degli Studi di Brescia. Downloaded on August 31,2026 at 08:52:22 UTC from IEEE Xplore.  Restrictions apply. 
+--- PAGE 3 ---
+The second block highlighted in red, composed of transis-
+tors M3, M4 and Cres, is activated when a spike is generated at
+the output. This reset circuit acts as a discharging mechanism
+to bring the membrane voltage Vmem to its resting potential,
+which is about 10 mV to 20 mV . The accuracy of the resting
+potential is not critical to the proper operation of the spiking
+neuron as much as the offset voltage in a typical operational
+ampliﬁer. When Vmem returns to its resting potential, the cycle
+of integration, comparison, and spike generation can start over.
+Fig. 3: Footprint of the neuron circuit implemented using the Cadence Virtuoso
+Layout Suite. the layout area is rounded 5 µm by 6 µm .
+B. Methods
+To characterize the circuit model, several tests were per-
+formed to verify the consistency of the circuit implementation
+with the biological behaviors required to design large-scale
+NeuroSoCs. Simulations were performed at the post-layout
+stage after extraction of parasitic capacitors and resistors. The
+extraction was performed after the addition of dummy metal
+ﬁlls for more accurate simulation results.
+1) Spiking behavior over time : In a biological neuron, the
+shape of the spike is caused by the instant bursting ﬂow of
+ions across the axon membrane. The circuit implementation
+proposed in this paper shows a similar behavior when the
+synaptic input current integrated in Cmem reaches a certain
+threshold.
+To carry out this experiment, we stimulated the neuron at
+its input with an ideal current source. Figure 4 depicts the
+excitatory stimulation. The amplitude of the current is 300 pA.
+An intermittent stimulus signal is used to ensure that the
+neuron only ﬁres when an excitatory current is applied and that
+no spikes are generated otherwise. To test this hypothesis, the
+output node of the proposed neuron is probed, and the resultant
+artiﬁcial action potentials are analyzed.
+2) Evolution of membrane potential : By integrating the
+input synaptic current through the capacitor, the suggested
+neuron circuit in this paper exhibits the same behavior as a
+biological neuron. Cmem models the evolution of the mem-
+brane voltage Vmem. To perform this experiment, the neuron
+is excited with the same input stimulus as in the previous
+experiment and the internal membrane voltage is probed at
+the positive end of the membrane capacitor Cmem.
+Fig. 4: Transient simulation of the membrane voltage in green for an input
+current of 300 pA. Transient simulation of the output voltage in magenta:
+Regular spiking of the neuron is obtained for an excitatory current of 300
+pA. Characteristic simulation of the spiking frequency in red and energy
+consumption per spike over the synaptic current
+3) Energy consumption per event : NeuroSoCs are coveted
+for their low power and high density. The proposed LIF
+neuron implementation’s energy consumption is analyzed to
+evaluate this factor. The current drawn by the circuit during
+operation is measured, and the power supplied over the time
+the neuron is spiking is calculated. In parallel, the mean
+spike frequency throughout the same time period is computed.
+Finally, the power consumption is divided by the frequency of
+spiking to produce the energy consumption per spike of the
+proposed architecture. By varying the input synaptic current,
+the same experiment is repeated in a systematic manner. The
+characteristic of the energy consumption drawn by the neuron
+per generated spike vs. the input synaptic current is obtained
+by assessing this factor over a dynamic range of excitation
+current. The synaptic current dynamic ranges from 10 pA to
+3000 pA.
+4) Spiking behaviour versus input synaptic current :
+Another interesting feature for validating the proposed design
+is to repeat the initial spiking experiment by increasing the
+input current and examining the mean spiking frequency at
+each step. The generated waveform shall reﬂect the frequency
+of the neuron’s spiking behavior over the synaptic current
+dynamic range. The design’s overall layout footprint in Figure
+3 is rounded to 5 µm by 6 µm . Layout techniques such
+as dummy transistors and active region balancing have been
+used to compensate for process variation. In sub-40nm CMOS
+technologies, special effects should not be neglected. By using
+large transistors at the input, the mismatch between the two
+branches of the input current mirror block is reduced. Given
+that the information is stored in the temporal coding between
+spikes rather than the precise value of synaptic current ampli-
+tude integrated in Cmem, the mismatch becomes an offset that
+can be deduced and corrected via subsequent calibration.
+3
+ 150 Authorized licensed use limited to: Università degli Studi di Brescia. Downloaded on August 31,2026 at 08:52:22 UTC from IEEE Xplore.  Restrictions apply. 
+--- PAGE 4 ---
+Parameters This design* Indiveri
+et al. 2006 [9]
+Joubert
+et al. 2012 [10]
+Cruz-Albrecht
+et al. 2012 [11]
+Wijekoon
+et al. 2008 [12]
+Danneville
+et al. 2019 [13]
+Sourikopoulos
+et al. 2017 [14]
+Ferreira
+2019 [15]
+Ronchini et al.
+2020 [6]
+Technology 28 nm 0.35 um 65 nm 90 nm 0.35 um 65 nm 65 nm 55 nm 180 nm
+Supp. V olt. (V) 0.2 3.3 V 1 V 1.2 V 3.3 0.2 0.2 (-0.1,0.1) 0.2
+Implementation Analog Analog Analog Analog Analog Analog Analog Analog Analog
+Neuron type LIF LIF LIF LIF Izhikevich A-H ML-based ML-based Izhikevich
+Time scale Accelerated Biological Accelerated Biological Accelerated Biological Biological Accelerated Biological
+Mem. Cap. (F) 3.4 fF 432 fF 500 fF - 100 fF 5 fF 4 fF 9*934 aF 35 fF
+Energy (J/spike) 1.2 fJ 900 pJ 2 pJ 400 fJ 9 pJ 2 fJ 4 fJ 3.6 fJ 58.5 fJ
+Spiking frequency 343 kHz 200 Hz 1.9 MHz 100 Hz 1 MHz 15.6 kHz 26 kHz 360 kHz -
+Area/neuron (µm 2) 34 2,573 120 442 2800 34 35 85 472
+TABLE I: Comparison of different neuron implementations in CMOS technology. * Post-layout simulations
+III. R ESULTS AND DISCUSSION
+The proposed spiking CMOS neuron model is implemented
+in TSMC 28 nm CMOS technology. The design has eight
+transistors and two capacitors, which minimizes the complex-
+ity of the design. The silicon neuron has a surface area of
+34 µm 2. The simulations were conducted after the layout
+phase including all additional extracted parasitic impedance.
+The results presented were obtained with a supply voltage of
+200 mV .
+1) Spiking behaviour over time : As illustrated in Figure
+4 in magenta, artiﬁcial action potentials are generated at
+the output whenever a current is present at the input. The
+amplitude of the spike is around 170 mV and the missing
+30 mV accounts for the saturation of the drain-to-source
+voltage.
+2) Evolution of the membrane potential : The evolution of
+the membrane potential is illustrated in Figure 4 in green. In
+the absence of an excitatory current, the membrane voltage
+remains at a constant voltage level of 35 mV . The presence
+of a current induces the integration of the membrane voltage,
+and, once it reaches a predeﬁned threshold, an output spike is
+generated. Both the membrane voltage and the output voltage
+are then reset to a resting potential.
+3) Energy consumption per event : This neuron has an
+energy efﬁciency of 1.2 fJ/spike. This value is obtained for a
+synaptic current of 30 pA. The black curve in Fig. 4 illustrates
+the energy consumption per spike through the dynamic range
+of the spiking neuron.
+4) Spiking behaviour versus input synaptic current : The
+evolution of the spiking frequency is highly correlated with
+the input current, as shown in Figure 4. The peak value
+reaches 334 kHz. This performance is achieved by using
+small capacitors. The characteristic curve presented in red in
+Figure 4 can be approximated with a square-root function plus
+constants.
+Table I shows a comparison between the performance of
+the published spiking artiﬁcial neurons. We can notice that
+a shrink in technology may not mean a gain in performance
+such as in [13], [14], [6] and this design.
+This design has a lower energy consumption metric than
+the state-of-the-art, but the active area footprint is the same.
+Furthermore, the maximum spiking frequency exceeds the
+current state-of-the-art. However, the timescale in this design is
+shorter than in [13], [14], [6]. In comparison to an accelerated
+temporal design, such as [15], where maximal spiking rates
+are comparable regardless of membrane capacitance and active
+silicon footprint. Be that as it may, the methods used to
+compute energy consumption in [14] and this work are not
+similar.
+IV. C ONCLUSION
+In this paper, a leaky integrate-and-ﬁre neuron model
+is proposed in 28 nm CMOS technology. The novelty of
+the proposed circuit is the analog implementation of a
+spiking artiﬁcial neuron using conventional 28 nm CMOS
+technology. In addition, the energy consumption per event can
+reach 1. 2f J/Spike and the maximum frequency of spiking
+is 343 kHz . The simulation results are evaluated after the
+layout extraction step. The design yielded an active surface
+of 34 µm 2. These results provide additional evidence that the
+proposed neuron is a promising architecture for large-scale
+NeuroSoCs.
+The design’s primary characteristics are ultra-low energy
+usage and a small active footprint. These properties make the
+neuron suitable for large-scale implementation of neuromor-
+phic system-on-chip, in which weighted synapses and neurons
+interact to generate complex inference-based dynamics and
+bring the power of machine learning algorithms to the edge.
+AKNOWLEDGEMENT
+The primary author would like to thank and recognize the
+contribution of each co-author and especially the dedication
+of Ms. Takwa Omrani and Mr. Konin Koua in the realiza-
+tion of this work. He also thanks Mr. Julien Rossignol and
+Mr. William Lemaire for their comments and suggestions to
+improve this paper.
+4
+ 151 Authorized licensed use limited to: Università degli Studi di Brescia. Downloaded on August 31,2026 at 08:52:22 UTC from IEEE Xplore.  Restrictions apply. 
+--- PAGE 5 ---
+REFERENCES
+[1] A. N. Burkitt, “A Review of the Integrate-and-ﬁre Neuron Model: I.
+Homogeneous Synaptic Input,” Biological Cybernetics , vol. 95, pp. 1–
+19, July 2006.
+[2] A. L. Hodgkin and A. F. Huxley, “A quantitative description of mem-
+brane current and its application to conduction and excitation in nerve,”
+The Journal of Physiology , vol. 117, no. 4, pp. 500–544, 1952.
+eprint:
+https://onlinelibrary.wiley.com/doi/pdf/10.1113/jphysiol.1952.sp004764.
+[3] E. Izhikevich, “Simple model of spiking neurons,” IEEE Transactions
+on Neural Networks , vol. 14, no. 6, pp. 1569–1572, 2003.
+[4] S. B. Shrestha and G. Orchard, “SLA YER: spike layer error reassign-
+ment in time,” CoRR, vol. abs/1810.08646, 2018.
+[5] M.-K. Kim, Y . Park, I.-J. Kim, and J.-S. Lee, “Emerging materials for
+neuromorphic devices and systems,” Iscience, p. 101846, 2020.
+[6] M. Ronchini, M. Zamani, H. Farkhani, and F. Moradi, “Tunable voltage-
+mode subthreshold CMOS neuron,” Proceedings of IEEE Computer
+Society Annual Symposium on VLSI, ISVLSI , vol. 2020-July, pp. 252–
+257, 2020.
+[7] P . A. Merolla and D. S. Modha, “A million spiking-neuron integrated
+circuit with a scalable communication network and interface,” Science,
+vol. 345, no. 6197, pp. 668–673, 2014.
+[8] N. Borivoje, THE CMOS INVERTER - Chapter 5 , p. 150.
+Berkley University, ee141: digital integrated circuits course ed.
+bwrcs.eecs.berkeley.edu.
+[9] G. Indiveri, E. Chicca, and R. Douglas, “A VLSI array of low-power
+spiking neurons and bistable synapses with spike-timing dependent
+plasticity,” IEEE Transactions on Neural Networks, vol. 17, pp. 211–221,
+Jan. 2006. Conference Name: IEEE Transactions on Neural Networks.
+[10] A. Joubert, B. Belhadj, O. Temam, and R. H ´eliot, “Hardware spiking
+neurons design: Analog or digital?,” in The 2012 International Joint
+Conference on Neural Networks (IJCNN) , pp. 1–5, June 2012. ISSN:
+2161-4407.
+[11] J. M. Cruz-Albrecht, M. W. Y ung, and N. Srinivasa, “Energy-Efﬁcient
+Neuron, Synapse and STDP Integrated Circuits,” IEEE Transactions on
+Biomedical Circuits and Systems , vol. 6, pp. 246–256, June 2012. Con-
+ference Name: IEEE Transactions on Biomedical Circuits and Systems.
+[12] J. H. B. Wijekoon and P . Dudek, “Compact silicon neuron circuit with
+spiking and bursting behaviour,” Neural Networks, vol. 21, pp. 524–534,
+Mar. 2008.
+[13] F. Danneville, C. Loyez, K. Carpentier, I. Sourikopoulos, E. Mercier, and
+A. Cappy, “A sub-35 pw axon-hillock artiﬁcial neuron circuit,” Solid-
+State Electronics , vol. 153, pp. 88 – 92, 2019.
+[14] I. Sourikopoulos, S. Hedayat, C. Loyez, F. Danneville, V . Hoel,
+E. Mercier, and A. Cappy, “A 4-fJ/Spike Artiﬁcial Neuron in 65 nm
+CMOS Technology,” Frontiers in Neuroscience, vol. 11, p. 123, 3 2017.
+[15] P . M. Ferreira, N. De Carvalho, G. Klisnick, and A. Benlarbi-Delai,
+“Energy efﬁcient fj/spike lts e-neuron using 55-nm node,” in 2019 32nd
+Symposium on Integrated Circuits and Systems Design (SBCCI) , pp. 1–6,
+2019.
+5
+ 152 
+ 
+Authorized licensed use limited to: Università degli Studi di Brescia. Downloaded on August 31,2026 at 08:52:22 UTC from IEEE Xplore.  Restrictions apply. 
